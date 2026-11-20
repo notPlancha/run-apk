@@ -1,5 +1,6 @@
 """Tests for run-apk CLI command execution."""
 
+import re
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,23 +14,29 @@ from run_apk.sdk import AndroidTools
 runner = CliRunner()
 
 
+def clean_output(text: str) -> str:
+    """Strip ANSI escape sequences from console output for robust assertions."""
+    return re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", text)
+
+
 def test_cli_version():
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert __version__ in result.stdout
+    assert __version__ in clean_output(result.stdout)
 
 
 def test_cli_help():
     result = runner.invoke(app, ["--help"], prog_name="run-apk")
     assert result.exit_code == 0
-    assert "run-apk" in result.stdout
-    assert "--avd" in result.stdout
-    assert "--device" in result.stdout
-    assert "--headless" in result.stdout
-    assert "--no-launch" in result.stdout
-    assert "--wipe-data" in result.stdout
-    assert "--screenshot" in result.stdout
-    assert "--logcat" in result.stdout
+    out = clean_output(result.stdout)
+    assert "run-apk" in out
+    assert "--avd" in out
+    assert "--device" in out
+    assert "--headless" in out
+    assert "--no-launch" in out
+    assert "--wipe-data" in out
+    assert "--screenshot" in out
+    assert "--logcat" in out
 
 
 def test_cli_run_full_flow(tmp_path: Path):
